@@ -304,6 +304,37 @@ var fourme = {
         }
         
 
+    }, 
+    requestZabbix: function(params,key) {
+        url=params.zabbixUrl+"/zabbix/api_jsonrpc.php";
+        request = new HttpRequest();
+         request.addHeader('Content-Type: application/json-rpc');
+          var data = "{"
+    "jsonrpc: 2.0",
+    "method : event.acknowledge",
+    "params: {"
+        "eventids:" + params.sourceID  ,
+        "action : 6",
+        "message: "  + "4me Ticket is " + key ,
+   " }",
+    "auth: " + params.apiKey,
+    "id:1",
+"}";
+      try{
+
+            response = request.post(url,data);
+        Zabbix.log(3, '4ME Webhook : Succesfully connected to Zabbix');
+
+      } catch(error){
+        Zabbix.log(4, '4ME Webhook : Failed to connect Zabbix problem description below \n'+response);
+
+      }
+
+      
+
+
+
+
     }
 };
 
@@ -317,7 +348,7 @@ try {
     result.tags.__zbx_4ME_issuekey = key;
     result.tags.__zbx_4ME_issuelink = "https://kyndryl-support.4me.qa/problems/"+key;
     Zabbix.log(3, ' 4me Webhook id: ' + key);
-
+    fourme.requestZabbix(params,key);
     return JSON.stringify(result);
 
 } catch (error) {
