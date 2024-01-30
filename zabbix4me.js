@@ -82,7 +82,7 @@ var fourme = {
             requestURL += "&" + "manager=" + this.urlEncode(amirKhanUser);
 
             // Append service parameter based on machineOs and monsolution
-           Zabbix.log(3, "params.machineOs: " + params.machineOs + " params.monsolution: " + params.monsolution);
+            Zabbix.log(3, "params.machineOs: " + params.machineOs + " params.monsolution: " + params.monsolution);
             if (params.machineOs === "Windows" && params.monsolution === "win") { // ["win", "exc7", "ad", "iis", "lync", "esx"].includes(params.monsolution)) {  //Win, Exc7, ad, iis, lync, vmware(esx)
                 requestURL += "&" + this.urlEncode("service=" + systemManagementService);
             } else if (params.machineOs === "Windows" && params.monsolution === "exc7") {
@@ -276,20 +276,20 @@ var fourme = {
             request.setProxy(fourme.HTTPProxy);
         }
 
-       // if ((params.impact === "4" || params.impact === "5") && (params.status === "PROBLEM")) {
-            Zabbix.log(3, '4ME Webhook : Sending request: ' + url);
+        // if ((params.impact === "4" || params.impact === "5") && (params.status === "PROBLEM")) {
+        Zabbix.log(3, '4ME Webhook : Sending request: ' + url);
 
-            response = request.post(url);
+        response = request.post(url);
 
-            Zabbix.log(3, '4ME Webhook : Received response with status code ' + request.getStatus() + '\n' + response);
+        Zabbix.log(3, '4ME Webhook : Received response with status code ' + request.getStatus() + '\n' + response);
         //} else {
-         //  Zabbix.log(3, '4ME Webhook : Script skipped ticketing for Minor,Major and Warning alarms .');
-       //}
+        //  Zabbix.log(3, '4ME Webhook : Script skipped ticketing for Minor,Major and Warning alarms .');
+        //}
 
         if (response !== null) {
             try {
                 response = JSON.parse(response);
-                Zabbix.log(3, '4ME Webhook : Parsed 4ME Application Id:'+response.id);
+                Zabbix.log(3, '4ME Webhook : Parsed 4ME Application Id:' + response.id);
                 return response.id;
 
             } catch (error) {
@@ -302,35 +302,35 @@ var fourme = {
         if (status < 200 || status >= 300 || status === null) {
             const message = 'Request failed with status code ' + (status !== null ? status : '') + '\n' + response;
         }
-        
 
-    }, 
-    requestZabbix: function(params,key) {
-        url=params.zabbixUrl+"/zabbix/api_jsonrpc.php";
+
+    },
+    requestZabbix: function(params, key) {
+        url = params.zabbixUrl + "/zabbix/api_jsonrpc.php";
         request = new HttpRequest();
-         request.addHeader('Content-Type: application/json-rpc');
-          var data = "{"
-    "jsonrpc: 2.0",
-    "method : event.acknowledge",
-    "params: {"
-        "eventids:" + params.sourceID  ,
-        "action : 6",
-        "message: "  + "4me Ticket is " + key ,
-   " }",
-    "auth: " + params.apiKey,
-    "id:1",
-"}";
-      try{
+        request.addHeader('Content-Type: application/json-rpc');
+        var data = "{" +
+            " \"jsonrpc\": \"2.0\", " +
+            " \"method\" : \"event.acknowledge\"," +
+            " \"params\": {" +
+            " \"eventids\": " + params.sourceID + "," +
+            " \"action\" : 4 ," +
+            " \"message\": \"" + "4me Ticket is " + key + "\" " +
+            " }," +
+            " \"auth\":\"" + params.zabbixApiKey + "\", " +
+            " \"id\":1" +
+            "}";
+        try {
+            Zabbix.log(3, '4ME Webhook : Sending Request to Zabbix request below \n' + data);
 
-            response = request.post(url,data);
-        Zabbix.log(3, '4ME Webhook : Succesfully connected to Zabbix');
+            response = request.post(url, data);
 
-      } catch(error){
-        Zabbix.log(4, '4ME Webhook : Failed to connect Zabbix problem description below \n'+response);
+            Zabbix.log(3, '4ME Webhook : Succesfully connected to Zabbix response below \n' + response);
 
-      }
+        } catch (error) {
+            Zabbix.log(4, '4ME Webhook : Failed to connect Zabbix problem description below \n' + response);
 
-      
+        }
 
 
 
@@ -342,13 +342,15 @@ try {
     Zabbix.log(3, '4ME Webhook : Started with params: ' + value);
 
     var params = JSON.parse(value);
-    var key=fourme.request("post", params);
+    var key = fourme.request("post", params);
 
-    result = {tags: {}}
+    result = {
+        tags: {}
+    }
     result.tags.__zbx_4ME_issuekey = key;
-    result.tags.__zbx_4ME_issuelink = "https://kyndryl-support.4me.qa/problems/"+key;
+    result.tags.__zbx_4ME_issuelink = "https://kyndryl-support.4me.qa/problems/" + key;
     Zabbix.log(3, ' 4me Webhook id: ' + key);
-    fourme.requestZabbix(params,key);
+    fourme.requestZabbix(params, key);
     return JSON.stringify(result);
 
 } catch (error) {
