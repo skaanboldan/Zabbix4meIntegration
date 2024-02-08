@@ -12,11 +12,18 @@ userName:
 apiKey:
  */
 
+
+
+
+
 Zabbix.log(3, "Starting zabbix 4me integration");
 //Teams
 var wintelTeams = 31507;
+//WindowsSunucuYönetimi
 var aixTeams = 31510;
+
 var databaseTeams = 31513;
+var databaseTeamsSI="Database";
 var DisasterandRecovery = 31509;
 var Monitoring = 31508;
 var SAP = 31505;
@@ -37,7 +44,19 @@ var YerindeDestekManisa = 31579;
 
 //Services
 var databaseServices = 64123;
+var databaseServicesSI="Database";
+
 var systemManagementService = 64121;
+var systemManagementServiceSI="Windows Sunucu Yönetimi";
+
+var aixServices = 305118;
+var aixServicesSI="OS Software \ OS AIX";
+
+var linuxService = 305119;
+var linuxServiceSI="OS Software \ OS LINUX";
+
+
+
 
 //Users
 var amirKhanUser = 3702553;
@@ -45,7 +64,7 @@ var amirKhanUser = 3702553;
 var fourme = {
 
 
-    params: {},
+    params: {}, 
 
     setParams: function(params) {
         if (typeof params !== 'object') {
@@ -66,10 +85,12 @@ var fourme = {
         if (params) {
             var requestURL = "?"
 
+            requestURL += "&" + "category=" + this.urlEncode(fourme.statusMapper("incident")); 
             //impact
             if (params.impact) {
                 requestURL += "&" + "impact=" + this.urlEncode(fourme.statusMapper(params.impact));
             }
+
             //Source
             if (params.source) {
                 requestURL += "&" + "source=" + this.urlEncode(params.source);
@@ -84,34 +105,36 @@ var fourme = {
             // Append service parameter based on machineOs and monsolution
             Zabbix.log(3, "params.machineOs: " + params.machineOs + " params.monsolution: " + params.monsolution);
             if (params.machineOs === "Windows" && params.monsolution === "win") { // ["win", "exc7", "ad", "iis", "lync", "esx"].includes(params.monsolution)) {  //Win, Exc7, ad, iis, lync, vmware(esx)
-                requestURL += "&" + this.urlEncode("service=" + systemManagementService);
+                requestURL += "&" + this.urlEncode("service_instance=" + systemManagementServiceSI);
             } else if (params.machineOs === "Windows" && params.monsolution === "exc7") {
-                requestURL += "&" + this.urlEncode("service=" + systemManagementService);
-            } else if (params.machineOs === "Windows" && params.monsolution === "exc7") {
-                requestURL += "&" + this.urlEncode("service=" + systemManagementService);
+                requestURL += "&" + this.urlEncode("service_instance=" + systemManagementServiceSI);
             } else if (params.machineOs === "Windows" && params.monsolution === "ad") {
-                requestURL += "&" + this.urlEncode("service=" + systemManagementService);
+                requestURL += "&" + this.urlEncode("service=" + systemManagementServiceSI);
             } else if (params.machineOs === "Windows" && params.monsolution === "iis") {
-                requestURL += "&" + this.urlEncode("service=" + systemManagementService);
+                requestURL += "&" + this.urlEncode("service_instance=" + systemManagementServiceSI);
             } else if (params.machineOs === "Windows" && params.monsolution === "lync") {
-                requestURL += "&" + this.urlEncode("service=" + systemManagementService);
+                requestURL += "&" + this.urlEncode("service_instance=" + systemManagementServiceSI);
             } else if (params.machineOs === "Windows" && params.monsolution === "esx") {
-                requestURL += "&" + this.urlEncode("service=" + systemManagementService);
-            } else if (params.machineOs === "aix") {
-                requestURL += "&" + this.urlEncode("service=" + systemManagementService);
-            } else if (params.machineOs === "Windows" && params.monsolution === "mssql") { //mssql, mssc - Database 	Database
-                requestURL += "&" + this.urlEncode("service=" + databaseServices);
+                requestURL += "&" + this.urlEncode("service_instance=" + systemManagementServiceSI);
+            } else if (params.machineOs === "Windows" && params.monsolution === "mssql") { //mssql, mssc - Database     Database
+                requestURL += "&" + this.urlEncode("service_instance=" + databaseServicesSI);
             } else if (params.machineOs === "Windows" && params.monsolution === "mssc") {
-                requestURL += "&" + this.urlEncode("service=" + databaseServices);
+                requestURL += "&" + this.urlEncode("service_instance=" + systemManagementServiceSI);
             } else if (params.machineOs === "Windows" && params.monsolution === "dbcpu") {
-                requestURL += "&" + this.urlEncode("service=" + databaseServices);
+                requestURL += "&" + this.urlEncode("service_instance=" + databaseServicesSI);
             } else if (params.application === "vmware") {
-                requestURL += "&" + this.urlEncode("service=" + systemManagementService);
+                requestURL += "&" + this.urlEncode("service_instance=" + systemManagementServiceSI);
+            } else if (params.monsolution === "hyperv") {
+                requestURL += "&" + this.urlEncode("service_instance=" + systemManagementServiceSI);
+            } else if (params.machineOs === "linux") {
+                requestURL += "&" + this.urlEncode("service_instance=" + linuxServiceSI);
+            } else if (params.machineOs === "aix") {
+                requestURL += "&" + this.urlEncode("service_instance=" + aixServicesSI);
             }
 
             // Append team parameter based on machineOs and application
 
-            if (params.machineOs === "Windows" && params.monsolution === "win") { // ["win", "exc7", "ad", "iis", "lync", "esx"].includes(params.monsolution)) {  //Win, Exc7, ad, iis, lync, vmware(esx)
+          /*  if (params.machineOs === "Windows" && params.monsolution === "win") { // ["win", "exc7", "ad", "iis", "lync", "esx"].includes(params.monsolution)) {  //Win, Exc7, ad, iis, lync, vmware(esx)
                 requestURL += "&" + this.urlEncode("team=" + wintelTeams);
             } else if (params.machineOs === "Windows" && params.monsolution === "exc7") {
                 requestURL += "&" + this.urlEncode("team=" + wintelTeams);
@@ -127,7 +150,7 @@ var fourme = {
                 requestURL += "&" + this.urlEncode("team=" + wintelTeams);
             } else if (params.machineOs === "aix") {
                 requestURL += "&" + this.urlEncode("team=" + aixTeams);
-            } else if (params.machineOs === "Windows" && params.monsolution === "mssql") { //mssql, mssc - Database 	Database
+            } else if (params.machineOs === "Windows" && params.monsolution === "mssql") { //mssql, mssc - Database     Database
                 requestURL += "&" + this.urlEncode("team=" + databaseTeams);
             } else if (params.machineOs === "Windows" && params.monsolution === "mssc") {
                 requestURL += "&" + this.urlEncode("team=" + databaseTeams);
@@ -135,18 +158,8 @@ var fourme = {
                 requestURL += "&" + this.urlEncode("team=" + databaseTeams);
             } else if (params.application === "vmware") {
                 requestURL += "&" + this.urlEncode("team=" + wintelTeams);
-            }
+            } */
 
-
-            /*
-                        if (params.machineOs === "Windows" && ["win", "exc7", "ad", "iis", "lync", "esx"].includes(params.monsolution)) {
-                            requestURL += "&" + this.urlEncode("team=" + wintelTeams);
-                        } else if (params.machineOs === "aix") {
-                            requestURL += "&" + this.urlEncode("team=" + aixTeams);
-                        } else if (params.machineOs === "Windows" && ["mssql", "mssc"].includes(params.monsolution)) {
-                            requestURL += "&" + this.urlEncode("team=" + databaseTeams);
-                        }
-            */
             //subject
             if (params.source && params.name) {
                 requestURL += "&" + "subject=" + this.urlEncode(this.deleteUnwantedChars(params.source) + " : " + this.urlEncode(this.deleteUnwantedChars(params.name)) + " : Event ID: " + this.urlEncode(this.deleteUnwantedChars(params.sourceID)));
@@ -176,6 +189,7 @@ var fourme = {
     urlEncode: function(text) {
         try {
             if (text.includes(' ')) text = text.replace(/ /g, '%20');
+            if (text.includes('\'')) text = text.replace(/\'/g, '%27');
             //if (text.includes('%')) text = text.replace(/\%/, '%25%');
             /* if (text.includes('!')) text = text.replace(/\!/g, '%21');
             if (text.includes('"')) text = text.replace(/\"/g, '%22');
@@ -348,7 +362,7 @@ try {
         tags: {}
     }
     result.tags.__zbx_4ME_issuekey = key;
-    result.tags.__zbx_4ME_issuelink = "https://kyndryl-support.4me.qa/problems/" + key;
+    result.tags.__zbx_4ME_issuelink = "https://kyndryl-support.4me.qa/requests/" + key;
     Zabbix.log(3, ' 4me Webhook id: ' + key);
     fourme.requestZabbix(params, key);
     return JSON.stringify(result);
